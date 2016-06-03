@@ -100,87 +100,100 @@ describe('Koel', ()=>{
     done();
   });
 
-  it('Should be able to use * prefix to set optional', (done)=>{
+  it('Should wrap objects up properly', (done)=>{
     const k = new Koel(`{
-      '*key': string()
-    }`);
+        obj: object()
+      }`);
     const o = k.toJSON();
-    expect(o.key).to.be.an.object();
-    expect(o.key.type).to.be.a.string().and.to.equal('string');
-    expect(o.key.required).to.be.a.boolean().and.to.equal(false);
+    expect(o.obj).to.be.an.object();
+    expect(o.obj.type).to.be.a.string().and.to.equal('object');
     done();
   });
 
-  it('Should be able to use custom prefixes to set optional', (done)=>{
-    const KoelLink = new KoelTyper('link', [
-      'default',
-      'link'
-    ]);
-    const mappers = Object.assign({}, Koel.MAPPERS, {
-      link(...args){
-        return new KoelLink(...args);
-      }
-    });
+  it('Should wrap object literals up properly', (done)=>{
     const k = new Koel(`{
-      '>key': 'table.name'
-    }`, {
-      mappers,
-      prefixes: {
-        '>'(link){
-          return new KoelLink({link});
-        },
-        '*'(value){
-          return value.required(false);
+        obj: {
+          keys: {
+            str: string(),
+            num: number()
+          }
         }
-      }
-    });
+      }`);
     const o = k.toJSON();
-    expect(o.key).to.be.an.object();
-    expect(o['>key']).to.be.undefined();
-    expect(o.key.type).to.be.a.string().and.to.equal('link');
-    expect(o.key.link).to.be.a.string().and.to.equal('table.name');
-    expect(o.key.required).to.be.a.boolean().and.to.equal(true);
+    expect(o.obj).to.be.an.object();
+    expect(o.obj.type).to.be.a.string().and.to.equal('object');
+    expect(o.obj.keys).to.be.an.object();
+    expect(o.obj.keys.str.type).to.be.a.string().and.to.equal('string');
+    expect(o.obj.keys.num.type).to.be.a.string().and.to.equal('number');
     done();
   });
 
-  it('Should be able to use multiple prefixes together', (done)=>{
-    const KoelLink = new KoelTyper('link', [
-      'default',
-      'display',
-      'link'
-    ]);
-    const mappers = Object.assign({}, Koel.MAPPERS, {
-      link(...args){
-        return new KoelLink(...args);
-      }
-    });
+  it('Should inline constants', (done)=>{
     const k = new Koel(`{
-      '>*key': 'table.id=table.name'
-    }`, {
-      mappers,
-      prefixes: {
-        '>'(value){
-          const [
-            link,
-            ...other
-          ] = value.split('=');
-          const display = other.length?other.join('='):link;
-          return new KoelLink({link, display});
-        },
-        '*'(value){
-          return value.required(false);
-        }
-      }
-    });
+        str: 'String',
+        bTrue: true,
+        bFalse: false,
+        num: 123,
+        nl: null,
+        ud: undefined
+      }`);
     const o = k.toJSON();
-    expect(o.key).to.be.an.object();
-    expect(o['>*key']).to.be.undefined();
-    expect(o['*key']).to.be.undefined();
-    expect(o['>key']).to.be.undefined();
-    expect(o.key.type).to.be.a.string().and.to.equal('link');
-    expect(o.key.link).to.be.a.string().and.to.equal('table.id');
-    expect(o.key.display).to.be.a.string().and.to.equal('table.name');
-    expect(o.key.required).to.be.a.boolean().and.to.equal(false);
+    expect(o).to.be.an.object();
+    expect(o.str).to.be.an.object();
+    expect(o.str.type).to.be.a.string().and.to.equal('constant');
+    expect(o.str.value).to.be.a.string().and.to.equal('String');
+    expect(o.bTrue.type).to.be.a.string().and.to.equal('constant');
+    expect(o.bTrue.value).to.be.a.boolean().and.to.equal(true);
+    expect(o.bFalse.type).to.be.a.string().and.to.equal('constant');
+    expect(o.bFalse.value).to.be.a.boolean().and.to.equal(false);
+    expect(o.num.type).to.be.a.string().and.to.equal('constant');
+    expect(o.num.value).to.be.a.number().and.to.equal(123);
+    expect(o.nl.type).to.be.a.string().and.to.equal('constant');
+    expect(o.nl.value).to.be.null();
+    expect(o.ud.type).to.be.a.string().and.to.equal('constant');
+    expect(o.ud.value).to.be.undefined();
+    done();
+  });
+
+  it('Should pass the full test', (done)=>{
+    const xpct = {
+        "o": {
+          "keys": {
+            "str": {
+              "required": true,
+              "value": "string",
+              "type": "constant"
+            },
+            "o2": {
+              "keys": {
+                "num": {
+                  "required": true,
+                  "value": 123,
+                  "type": "constant"
+                }
+              },
+              "required": true,
+              "type": "object"
+            }
+          },
+          "required": false,
+          "type": "object"
+        }
+      };
+    const k = new Koel(`{
+        o: object({
+          keys: {
+            str: 'string',
+            o2: {
+              keys: {
+                num: 123,
+              }
+            }
+          }
+        }).optional()
+      }`);
+    const o = k.toJSON();
+    expect(o).to.equal(xpct);
     done();
   });
 });
