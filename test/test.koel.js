@@ -225,4 +225,90 @@ describe('Koel', ()=>{
     expect(o).to.equal(xpct);
     done();
   });
+
+  it('Should place allowable array item types into items', (done)=>{
+    const xpct = {
+        "arr": {
+          "items": [
+            {
+              "required": true,
+              "type": "string"
+            },
+            {
+              "integer": false,
+              "required": true,
+              "type": "number"
+            },
+            {
+              "keys": {
+                "keys": {},
+                "required": true,
+                "foo": "bar",
+                "some": {
+                  "required": true,
+                  "type": "string"
+                },
+                "type": "object"
+              }
+            }
+          ],
+          "required": true,
+          "type": "array"
+        }
+      };
+    const k = new Koel(`{
+        arr: [string(), number(), {
+          keys: {
+            foo: 'bar',
+            some: string()
+          }
+        }]
+      }`);
+    const o = k.toJSON();
+    expect(o).to.equal(xpct);
+    done();
+  });
+
+  it('Should place allowable array item types into items', (done)=>{
+    const xpct = {
+        "arr": {
+          "items": [
+            {
+              "required": true,
+              "type": "string"
+            },
+            {
+              "integer": false,
+              "required": true,
+              "type": "number"
+            },
+            {
+              "keys": {
+                "keys": {},
+                "required": true,
+                "foo": "bar",
+                "some": {
+                  "required": true,
+                  "type": "string"
+                },
+                "type": "object"
+              }
+            }
+          ],
+          "required": true,
+          "type": "array"
+        }
+      };
+    const k = new Koel(`{
+        arr: array({items: [string(), number(), {
+          keys: {
+            foo: 'bar',
+            some: string()
+          }
+        }]})
+      }`);
+    const o = k.toJSON();
+    expect(o).to.equal(xpct);
+    done();
+  });
 });
