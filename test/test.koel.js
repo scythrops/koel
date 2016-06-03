@@ -196,4 +196,33 @@ describe('Koel', ()=>{
     expect(o).to.equal(xpct);
     done();
   });
+
+  it('Should allow for custom mappers', (done)=>{
+    const xpct = {
+      "linkId": {
+        "required": true,
+        "source": "someTable",
+        "key": "id",
+        "caption": "name",
+        "type": "link"
+      }
+    };
+    const KoelLink = new KoelTyper('link', [
+      {type: 'string', key: 'source'},
+      {type: 'string', key: 'id'},
+      {type: 'string', key: 'caption'},
+    ]);
+    const k = new Koel(`{
+      linkId: link({source: 'someTable', key: 'id', caption: 'name'})
+    }`, {
+      mappers: {
+        link(...args){
+          return new KoelLink(...args);
+        }
+      }
+    });
+    const o = k.toJSON();
+    expect(o).to.equal(xpct);
+    done();
+  });
 });
