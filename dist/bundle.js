@@ -19,15 +19,65 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 var _require = require('./typer');
 
 var KoelTyper = _require.KoelTyper;
+var KoelObject = exports.KoelObject = new KoelTyper('object', [{ key: 'items', default: [] }], {
+  constructor: function constructor() {
+    for (var _len = arguments.length, items = Array(_len), _key = 0; _key < _len; _key++) {
+      items[_key] = arguments[_key];
+    }
+
+    var options = _typeof(items[0]) === 'object' ? items.shift() : {};
+    return Object.assign({}, options, { items: items });
+  }
+});
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
+var _require = require('./typer');
+
+var KoelTyper = _require.KoelTyper;
+var KoelConstant = exports.KoelConstant = new KoelTyper('constant', [{ key: 'value' }], {
+  constructor: function constructor(args) {
+    if (args === void 0 || args === null || (typeof args === 'undefined' ? 'undefined' : _typeof(args)) !== 'object') {
+      args = { value: args };
+    }
+    return args;
+  }
+});
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _require = require('./typer');
+
+var KoelTyper = _require.KoelTyper;
+var KoelDate = exports.KoelDate = new KoelTyper('date', ['default', { type: 'date', key: 'min' }, { type: 'date', key: 'max' }]);
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
+var _require = require('./typer');
+
+var KoelTyper = _require.KoelTyper;
 
 var _require2 = require('./errors');
 
 var UnallowedTypeError = _require2.UnallowedTypeError;
 var KoelEnum = exports.KoelEnum = new KoelTyper('enum', ['default', { type: 'array', key: 'allows' }], {
   constructor: function constructor() {
-    var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-    var _options$allows = options.allows;
-    var allows = _options$allows === undefined ? [] : _options$allows;
+    var props = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+    var _props$allows = props.allows;
+    var allows = _props$allows === undefined ? [] : _props$allows;
 
     allows.forEach(function (item) {
       var type = typeof item === 'undefined' ? 'undefined' : _typeof(item);
@@ -36,6 +86,7 @@ var KoelEnum = exports.KoelEnum = new KoelTyper('enum', ['default', { type: 'arr
       }
       throw new UnallowedTypeError(type);
     });
+    return props;
   }
 });
 'use strict';
@@ -141,15 +192,21 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _arguments = arguments;
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+
 /*
 {
   "required": string(),
-  "*optional": string(),
-  ">link": "collection.key[=collection.display]",
+  "optional": string().optional(),
+  "link": link("collection.key[=collection.display]"),
   "number": number(),
   "regex": /someregex/gi,
   "anything": any(),
@@ -188,8 +245,24 @@ var _require5 = require('./any');
 
 var KoelAny = _require5.KoelAny;
 
+var _require6 = require('./date');
 
-var MAPPERS = {
+var KoelDate = _require6.KoelDate;
+
+var _require7 = require('./object');
+
+var KoelObject = _require7.KoelObject;
+
+var _require8 = require('./const');
+
+var KoelConstant = _require8.KoelConstant;
+
+var _require9 = require('./array');
+
+var KoelArray = _require9.KoelArray;
+var CONSTANT_TYPES = exports.CONSTANT_TYPES = ['string', 'number', 'boolean'];
+
+var DEFAULT_MAPPERS = exports.DEFAULT_MAPPERS = {
   string: function string() {
     for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
       args[_key] = arguments[_key];
@@ -217,28 +290,56 @@ var MAPPERS = {
     }
     return new KoelRegex(expr);
   },
-  enumeration: function enumeration() {
+  date: function date() {
     for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
       args[_key3] = arguments[_key3];
+    }
+
+    return new (Function.prototype.bind.apply(KoelDate, [null].concat(args)))();
+  },
+  enumeration: function enumeration() {
+    for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+      args[_key4] = arguments[_key4];
     }
 
     var allows = args.length === 1 && args[0] instanceof Array ? args : [args[0]];
     return new KoelEnum({ allows: allows });
   },
   any: function any() {
-    for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-      args[_key4] = arguments[_key4];
+    for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+      args[_key5] = arguments[_key5];
     }
 
     return new (Function.prototype.bind.apply(KoelAny, [null].concat(args)))();
   },
-  object: function object() {
-    return arguments.length <= 0 ? undefined : arguments[0];
+  constant: function constant() {
+    for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+      args[_key6] = arguments[_key6];
+    }
+
+    return new (Function.prototype.bind.apply(KoelConstant, [null].concat(args)))();
   },
-  array: function array() {}
+  object: function object(proto) {
+    var _ref = proto || {};
+
+    var _ref$keys = _ref.keys;
+    var keys = _ref$keys === undefined ? {} : _ref$keys;
+
+    var rest = _objectWithoutProperties(_ref, ['keys']);
+
+    var newKeys = this.replaceSpecial(keys);
+    return new KoelObject(_extends({ keys: newKeys }, rest));
+  },
+  array: function array() {
+    for (var _len7 = arguments.length, types = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+      types[_key7] = arguments[_key7];
+    }
+
+    return new (Function.prototype.bind.apply(KoelArray, [null].concat(types)))();
+  }
 };
 
-var SPECIAL_MAPPERS = [{
+var SPECIAL_MAPPERS = exports.SPECIAL_MAPPERS = [{
   check: function check(value) {
     return value instanceof RegExp;
   },
@@ -261,10 +362,18 @@ var SPECIAL_MAPPERS = [{
   }
 }, {
   check: function check(value) {
-    return value instanceof Object;
+    var type = typeof value === 'undefined' ? 'undefined' : _typeof(value);
+    return (value === void 0 || CONSTANT_TYPES.indexOf(type) > -1 || value === null) && !(value || {}).type;
   },
   map: function map(value, mappers) {
-    return mappers.object(value);
+    return mappers.constant(value);
+  }
+}, {
+  check: function check(value) {
+    return value instanceof Object && !value.type;
+  },
+  map: function map(keys, mappers) {
+    return mappers.object.call(this, keys);
   }
 }];
 
@@ -278,7 +387,7 @@ var find = function find(array, predicate) {
   var list = Object(array);
   var length = list.length >>> 0;
   var thisArg = _arguments[1];
-  var value;
+  var value = void 0;
 
   for (var i = 0; i < length; i++) {
     value = list[i];
@@ -296,7 +405,7 @@ var Koel = exports.Koel = function () {
     _classCallCheck(this, Koel);
 
     this.schema = schema;
-    this.mappers = Object.assign({}, MAPPERS, options.mappers);
+    this.mappers = Object.assign({}, DEFAULT_MAPPERS, options.mappers);
     this.specialMappers = options.specialMappers || SPECIAL_MAPPERS;
     this._schema = this.parseSchema(schema);
   }
@@ -318,18 +427,37 @@ var Koel = exports.Koel = function () {
 
       var keys = Object.keys(schema);
       return keys.reduce(function (s, key) {
-        var value = schema[key];
+        var rawValue = schema[key];
         var mapper = find(_this.specialMappers, function (mapper) {
-          return mapper.check(value);
+          return mapper.check(rawValue);
         });
-        if (mapper) {
-          s[key] = mapper.map(value, _this.mappers);
-          return s;
-        }
+        var value = mapper ? mapper.map.call(_this, rawValue, _this.mappers) : schema[key];
         s[key] = value;
         return s;
       }, {});
     }
+
+    /*
+      processPrefixes(schema){
+        const keys = Object.keys(schema);
+        const prefixes = this.prefixes;
+        const response = keys.reduce((s, key)=>{
+          let value = schema[key];
+          let idx = 0;
+          let char = key.charAt(idx);
+          let handler;
+          while(handler = prefixes[char]){
+            value = handler.call(this, value, key, schema);
+            idx++;
+            char = key.charAt(idx);
+          }
+          s[key.substr(idx)] = value;
+          return s;
+        }, {});
+        return response;
+      }
+    */
+
   }, {
     key: 'parseSchema',
     value: function parseSchema(schema) {
@@ -337,11 +465,13 @@ var Koel = exports.Koel = function () {
 
       var mapperNames = Object.keys(this.mappers);
       var mappers = mapperNames.map(function (name) {
-        return _this2.mappers[name];
+        return _this2.mappers[name].bind(_this2);
       });
       var src = typeof schema === 'string' ? schema : JSON.stringify(schema, null, '  ');
       var mapSrc = 'return ' + schema + ';';
       var f = new Function(mapperNames, mapSrc);
+      //const prefixedSchema = f(...mappers);
+      //const _schema = this.processPrefixes(prefixedSchema);
       var _schema = f.apply(undefined, _toConsumableArray(mappers));
       return this.replaceSpecial(_schema);
     }
@@ -361,6 +491,16 @@ var _require = require('./typer');
 
 var KoelTyper = _require.KoelTyper;
 var KoelNumber = exports.KoelNumber = new KoelTyper('number', [{ type: 'number', key: 'default' }, { type: 'number', key: 'min' }, { type: 'number', key: 'max' }, { type: 'boolean', key: 'integer', default: false }, { type: 'number', key: 'percision', min: 0 }]);
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _require = require('./typer');
+
+var KoelTyper = _require.KoelTyper;
+var KoelObject = exports.KoelObject = new KoelTyper('object', [{ key: 'keys', default: {} }]);
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -393,6 +533,10 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var _require = require('./errors');
@@ -403,9 +547,11 @@ var RangeError = _require.RangeError;
 
 var DEFAULT_TYPES = [{ key: 'description', type: 'string' }, { key: 'notes', type: 'string' }, { key: 'required', type: 'boolean', default: true }];
 
-var DEFAULT_PREFIXES = {
-  '*': { required: false }
+/*
+const DEFAULT_PREFIXES = {
+  '*': {required: false},
 };
+*/
 
 var toFullType = function toFullType(typeInfo) {
   if (typeof typeInfo === 'string') {
@@ -424,10 +570,29 @@ var uniqueTypes = function uniqueTypes(typeInfo, index, arr) {
   return idx === index;
 };
 
+var KoelType = exports.KoelType = function () {
+  function KoelType() {
+    _classCallCheck(this, KoelType);
+  }
+
+  _createClass(KoelType, [{
+    key: 'optional',
+    value: function optional() {
+      var isOptional = arguments.length <= 0 || arguments[0] === undefined ? true : arguments[0];
+
+      return this.required(!isOptional);
+    }
+  }]);
+
+  return KoelType;
+}();
+
+;
+
 var KoelTyper = exports.KoelTyper = function KoelTyper(type, types) {
   var baseOptions = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
-  var prefixes = Object.assign({}, DEFAULT_PREFIXES, baseOptions.prefixes || {});
+  //const prefixes = Object.assign({}, DEFAULT_PREFIXES, baseOptions.prefixes || {});
   var objTypes = [].concat(types.map(toFullType), baseOptions.defaultTypes || [], DEFAULT_TYPES).filter(uniqueTypes);
   var defaults = objTypes.filter(function (info) {
     return info.default !== void 0;
@@ -441,23 +606,28 @@ var KoelTyper = exports.KoelTyper = function KoelTyper(type, types) {
     };
   });
 
-  var Handler = function () {
+  var Handler = function (_KoelType) {
+    _inherits(Handler, _KoelType);
+
     function Handler() {
       var props = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
       _classCallCheck(this, Handler);
 
+      var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(Handler).call(this, props, options));
+
       if (baseOptions.constructor) {
-        baseOptions.constructor.apply(this, arguments);
+        props = baseOptions.constructor.apply(_this, arguments);
       }
-      this.type = type;
+      _this.type = type;
       var defaultProps = defaults.reduce(function (obj, def) {
         obj[def.key] = def.value;
         return obj;
       }, {});
-      this.props = Object.assign(defaultProps, props);
-      this.prefixes = prefixes;
+      _this.props = Object.assign(defaultProps, props);
+      //this.prefixes = prefixes;
+      return _this;
     }
 
     _createClass(Handler, [{
@@ -473,7 +643,7 @@ var KoelTyper = exports.KoelTyper = function KoelTyper(type, types) {
     }]);
 
     return Handler;
-  }();
+  }(KoelType);
 
   ;
 
