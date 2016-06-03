@@ -19,13 +19,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 var _require = require('./typer');
 
 var KoelTyper = _require.KoelTyper;
-var KoelObject = exports.KoelObject = new KoelTyper('object', [{ key: 'items', default: [] }], {
+var KoelArray = exports.KoelArray = new KoelTyper('array', [{ key: 'items', default: [] }], {
   constructor: function constructor() {
-    for (var _len = arguments.length, items = Array(_len), _key = 0; _key < _len; _key++) {
-      items[_key] = arguments[_key];
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
     }
 
-    var options = _typeof(items[0]) === 'object' ? items.shift() : {};
+    var options = _typeof(args[0]) === 'object' ? args.shift() : {};
+    var items = options.items || args.shift();
     return Object.assign({}, options, { items: items });
   }
 });
@@ -330,12 +331,20 @@ var DEFAULT_MAPPERS = exports.DEFAULT_MAPPERS = {
     var newKeys = this.replaceSpecial(keys);
     return new KoelObject(_extends({ keys: newKeys }, rest));
   },
-  array: function array() {
-    for (var _len7 = arguments.length, types = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
-      types[_key7] = arguments[_key7];
-    }
+  array: function array(proto) {
+    var _this = this;
 
-    return new (Function.prototype.bind.apply(KoelArray, [null].concat(types)))();
+    var _ref2 = proto || {};
+
+    var _ref2$items = _ref2.items;
+    var items = _ref2$items === undefined ? [] : _ref2$items;
+
+    var rest = _objectWithoutProperties(_ref2, ['items']);
+
+    var newItems = items.map(function (item) {
+      return _this.replaceSpecial(item);
+    });
+    return new KoelArray(_extends({ items: newItems }, rest));
   }
 };
 
@@ -350,8 +359,8 @@ var SPECIAL_MAPPERS = exports.SPECIAL_MAPPERS = [{
   check: function check(value) {
     return Array.isArray(value);
   },
-  map: function map(value, mappers) {
-    return mappers.array(value);
+  map: function map(items, mappers) {
+    return mappers.array.call(this, { items: items });
   }
 }, {
   check: function check(value) {
@@ -423,15 +432,18 @@ var Koel = exports.Koel = function () {
   }, {
     key: 'replaceSpecial',
     value: function replaceSpecial(schema) {
-      var _this = this;
+      var _this2 = this;
 
+      if (typeof schema.type === 'string') {
+        return schema;
+      }
       var keys = Object.keys(schema);
       return keys.reduce(function (s, key) {
         var rawValue = schema[key];
-        var mapper = find(_this.specialMappers, function (mapper) {
+        var mapper = find(_this2.specialMappers, function (mapper) {
           return mapper.check(rawValue);
         });
-        var value = mapper ? mapper.map.call(_this, rawValue, _this.mappers) : schema[key];
+        var value = mapper ? mapper.map.call(_this2, rawValue, _this2.mappers) : schema[key];
         s[key] = value;
         return s;
       }, {});
@@ -461,11 +473,11 @@ var Koel = exports.Koel = function () {
   }, {
     key: 'parseSchema',
     value: function parseSchema(schema) {
-      var _this2 = this;
+      var _this3 = this;
 
       var mapperNames = Object.keys(this.mappers);
       var mappers = mapperNames.map(function (name) {
-        return _this2.mappers[name].bind(_this2);
+        return _this3.mappers[name].bind(_this3);
       });
       var src = typeof schema === 'string' ? schema : JSON.stringify(schema, null, '  ');
       var mapSrc = 'return ' + schema + ';';
