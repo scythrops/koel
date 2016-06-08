@@ -1,0 +1,1 @@
+{"version":3,"sources":["../lib/any.js"],"names":[],"mappings":";;;;;;eAAoB,QAAQ,SAAR,C;;IAAb,S,YAAA,S;AAEA,IAAM,4BAAU,IAAI,SAAJ,CAAc,KAAd,EAAqB,CAC1C,SAD0C,CAArB,CAAhB","file":"any.js","sourcesContent":["const {KoelTyper} = require('./typer');\n\nexport const KoelAny = new KoelTyper('any', [\n  'default',\n]);\n"]}

@@ -2,20 +2,21 @@
   "name": "koel",
   "version": "0.0.3",
   "description": "Transportable almost plain JSON schemas",
-  "main": "dist/build.js",
+  "main": "dist/index.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
     "test": "lab --transform ./test/setup.js --ignore 'Reflect,core,_babelPolyfill,regeneratorRuntime,__core-js_shared__'",
-    "compile": "babel lib/ --out-file dist/bundle.js",
+    "compile": "babel lib --out-dir dist --source-maps",
     "prepublish": "npm run compile"
   },
   "keywords": [
     "Hapi",
     "Joi",
     "Schema",
-    "Generator"
+    "Generator",
+    "Scythrops"
   ],
   "author": "Jeremy Darling <jeremy.darling@gmail.com>",
   "license": "MIT",
